@@ -20,6 +20,10 @@ func (this *Of[T]) Value() T {
 	return this.value
 }
 
+func Make[T any](newfunc func() T) Of[T] {
+	return Of[T]{New: newfunc}
+}
+
 func New[T any](newfunc func() T) *Of[T] {
 	return &Of[T]{New: newfunc}
 }

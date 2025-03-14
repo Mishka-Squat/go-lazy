@@ -12,6 +12,14 @@ type Of[T any] struct {
 	value T
 }
 
+func Make[T any](newfunc func() T) Of[T] {
+	return Of[T]{New: newfunc}
+}
+
+func New[T any](newfunc func() T) *Of[T] {
+	return &Of[T]{New: newfunc}
+}
+
 func (this *Of[T]) Value() T {
 	if this.done.Load() == 0 {
 		func() {
@@ -24,12 +32,4 @@ func (this *Of[T]) Value() T {
 		}()
 	}
 	return this.value
-}
-
-func Make[T any](newfunc func() T) Of[T] {
-	return Of[T]{New: newfunc}
-}
-
-func New[T any](newfunc func() T) *Of[T] {
-	return &Of[T]{New: newfunc}
 }

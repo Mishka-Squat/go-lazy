@@ -11,8 +11,8 @@ func TestLazyOfString(t *testing.T) {
 
 	called := 0
 
-	data := lazy.Of[string]{
-		New: func() string { called++; return sample },
+	data := lazy.OfFn[string]{
+		New: func(...any) string { called++; return sample },
 	}
 
 	if called != 0 {
@@ -35,7 +35,7 @@ func TestLazyOfString(t *testing.T) {
 		t.Fatal("failed 5")
 	}
 
-	data2 := lazy.New(func() string { return sample })
+	data2 := lazy.NewFn(func() string { return sample })
 	if data2.Value() != sample {
 		t.Fatal("failed 6")
 	}
@@ -43,8 +43,8 @@ func TestLazyOfString(t *testing.T) {
 }
 
 func BenchmarkValue(b *testing.B) {
-	data := lazy.Of[string]{
-		New: func() string { return "lazy string" },
+	data := lazy.OfFn[string]{
+		New: func(...any) string { return "lazy string" },
 	}
 
 	var res string

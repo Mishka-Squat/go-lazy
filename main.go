@@ -16,17 +16,30 @@ type OfFn[T any] struct {
 	value T
 }
 
-func MakeFn[T any](newfunc func(ref ...any) T) OfFn[T] {
+func MakeFn[T any](newfunc func() T) OfFn[T] {
+	return OfFn[T]{New: func(ref ...any) T { return newfunc() }}
+}
+
+func MakeRefFn[R, T any](newfunc func(ref R) T) OfFn[T] {
+	return OfFn[T]{New: func(ref ...any) T { return newfunc(ref[0].(R)) }}
+}
+
+func MakeAnyFn[T any](newfunc func(ref ...any) T) OfFn[T] {
 	return OfFn[T]{New: newfunc}
 }
 
 func NewFn[T any](newfunc func() T) Of[T] {
-	of := MakeFn(func(ref ...any) T { return newfunc() })
+	of := MakeFn(newfunc)
 	return &of
 }
 
 func NewRefFn[R, T any](newfunc func(ref R) T) Of[T] {
-	of := MakeFn(func(ref ...any) T { return newfunc(ref[0].(R)) })
+	of := MakeRefFn(newfunc)
+	return &of
+}
+
+func NewAnyFn[T any](newfunc func(ref ...any) T) Of[T] {
+	of := MakeAnyFn(newfunc)
 	return &of
 }
 

@@ -16,6 +16,11 @@ type OfFn[T any] struct {
 	value T
 }
 
+type OfFnCached[T any] struct {
+	OfFn[T]
+	key any
+}
+
 func MakeFn[T any](newfunc func() T) OfFn[T] {
 	return OfFn[T]{New: func(ref ...any) T { return newfunc() }}
 }
@@ -43,16 +48,44 @@ func NewAnyFn[T any](newfunc func(ref ...any) T) Of[T] {
 	return &of
 }
 
-func (this *OfFn[T]) Value(ref ...any) T {
-	if this.done.Load() == 0 {
+func (this *OfFn[T]) mutex_condition_fn(cond func() bool, fn func(), els ...func()) {
+	if cond() {
 		func() {
 			this.m.Lock()
 			defer this.m.Unlock()
-			if this.done.Load() == 0 {
-				this.done.Store(1)
-				this.value = this.New(ref...)
+			if cond() {
+				fn()
 			}
 		}()
+	} else {
+		for _, fn := range els {
+			fn()
+		}
 	}
+}
+
+func (this *OfFn[T]) Value(ref ...any) T {
+	this.mutex_condition_fn(func() bool { return this.done.Load() == 0 },
+		func() {
+			this.done.Store(1)
+			this.value = this.New(ref...)
+		})
+	return this.value
+}
+
+func (this *OfFnCached[T]) Value(ref ...any) T {
+	this.mutex_condition_fn(func() bool { return this.done.Load() == 0 },
+		func() {
+			this.done.Store(1)
+			this.value = this.New(ref...)
+		}, func() {
+			if len(ref) > 0 {
+				this.mutex_condition_fn(func() bool { return this.key != ref[0] },
+					func() {
+
+						this.done.Store(0)
+					})
+			}
+		})
 	return this.value
 }

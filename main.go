@@ -9,6 +9,10 @@ type Of[T any] interface {
 	Value(ref ...any) T
 }
 
+type OfM[T any] interface {
+	SetValue(value T)
+}
+
 type OfFn[T any] struct {
 	done  atomic.Uint32
 	m     sync.Mutex
@@ -88,4 +92,9 @@ func (this *OfFnCached[T]) Value(ref ...any) T {
 			}
 		})
 	return this.value
+}
+
+func (this *OfFn[T]) SetValue(value T) {
+	this.done.Store(1)
+	this.value = value
 }

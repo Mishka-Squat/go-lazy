@@ -7,6 +7,7 @@ import (
 
 type Of[T any] interface {
 	Value(ref ...any) T
+	ValueRef(ref ...any) *T
 }
 
 type OfM[T any] interface {
@@ -77,6 +78,15 @@ func (this *OfFn[T]) Value(ref ...any) T {
 	return this.value
 }
 
+func (this *OfFn[T]) ValueRef(ref ...any) *T {
+	this.mutex_condition_fn(func() bool { return this.done.Load() == 0 },
+		func() {
+			this.done.Store(1)
+			this.value = this.New(ref...)
+		})
+	return &this.value
+}
+
 func (this *OfFnCached[T]) Value(ref ...any) T {
 	this.mutex_condition_fn(func() bool { return this.done.Load() == 0 },
 		func() {
@@ -92,6 +102,23 @@ func (this *OfFnCached[T]) Value(ref ...any) T {
 			}
 		})
 	return this.value
+}
+
+func (this *OfFnCached[T]) ValueRef(ref ...any) *T {
+	this.mutex_condition_fn(func() bool { return this.done.Load() == 0 },
+		func() {
+			this.done.Store(1)
+			this.value = this.New(ref...)
+		}, func() {
+			if len(ref) > 0 {
+				this.mutex_condition_fn(func() bool { return this.key != ref[0] },
+					func() {
+
+						this.done.Store(0)
+					})
+			}
+		})
+	return &this.value
 }
 
 func (this *OfFn[T]) SetValue(value T) {

@@ -7,6 +7,7 @@ import (
 
 type Of2[T1, T2 any] interface {
 	Value(ref ...any) (T1, T2)
+	Reset()
 }
 
 type Of2M[T1, T2 any] interface {
@@ -98,4 +99,12 @@ func (this *Of2FnCached[T1, T2]) Value(ref ...any) (T1, T2) {
 func (this *Of2Fn[T1, T2]) SetValue(v1 T1, v2 T2) {
 	this.done.Store(1)
 	this.v1, this.v2 = v1, v2
+}
+
+func (this *Of2Fn[T1, T2]) Reset() {
+	var v1 T1
+	var v2 T2
+	this.done.Store(0)
+	this.v1 = v1
+	this.v2 = v2
 }

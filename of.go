@@ -8,6 +8,7 @@ import (
 type Of[T any] interface {
 	Value(ref ...any) T
 	ValueRef(ref ...any) *T
+	Reset()
 }
 
 type OfM[T any] interface {
@@ -124,4 +125,10 @@ func (this *OfFnCached[T]) ValueRef(ref ...any) *T {
 func (this *OfFn[T]) SetValue(value T) {
 	this.done.Store(1)
 	this.value = value
+}
+
+func (this *OfFn[T]) Reset() {
+	var v T
+	this.done.Store(0)
+	this.value = v
 }
